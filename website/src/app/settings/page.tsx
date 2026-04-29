@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -8,6 +8,25 @@ export default function SettingsPage() {
   const router = useRouter()
   const [deleteState, setDeleteState] = useState<'idle' | 'confirming' | 'deleting'>('idle')
   const [deleteError, setDeleteError] = useState('')
+  const [mapId, setMapId] = useState<string | null>(null)
+  const [isPublic, setIsPublic] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return
+      const { data } = await supabase.from('maps').select('id, is_public').eq('user_id', user.id).single()
+      if (data) { setMapId(data.id); setIsPublic(data.is_public) }
+    })
+  }, [])
+
+  async function handlePrivacyToggle() {
+    if (!mapId || isPublic === null) return
+    const next = !isPublic
+    setIsPublic(next)
+    const supabase = createClient()
+    supabase.from('maps').update({ is_public: next }).eq('id', mapId).then()
+  }
 
   async function handleLogout() {
     const supabase = createClient()
@@ -32,6 +51,8 @@ export default function SettingsPage() {
     router.refresh()
   }
 
+  const btnClass = "w-full py-2 rounded-lg text-sm font-medium text-white/80 bg-[#2b2b2c] border border-[#383838] hover:bg-[#383838] hover:text-white transition-colors"
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center" style={{ background: '#0a0a0a' }}>
       <h2 className="text-3xl font-semibold text-white mb-8 text-center">World Map Tracker</h2>
@@ -45,10 +66,13 @@ export default function SettingsPage() {
         <h3 className="text-sm font-medium text-white/70 uppercase tracking-wide mb-6">Settings</h3>
 
         <div className="space-y-3">
-          <button
-            onClick={handleLogout}
-            className="w-full py-2 rounded-lg text-sm font-medium text-white/80 bg-[#2b2b2c] border border-[#383838] hover:bg-[#383838] hover:text-white transition-colors"
-          >
+          {isPublic !== null && (
+            <button onClick={handlePrivacyToggle} className={btnClass}>
+              {isPublic ? 'Make map private' : 'Make map public'}
+            </button>
+          )}
+
+          <button onClick={handleLogout} className={btnClass}>
             Log out
           </button>
 
