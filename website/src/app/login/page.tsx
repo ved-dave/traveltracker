@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -50,21 +51,29 @@ export default function LoginPage() {
     if (error) { setForgotMsg(error.message) } else { setForgotMsg('Check your email for a reset link.') }
   }
 
-  const inputClass = "w-full px-3 py-2 rounded-lg text-sm text-gray-100 placeholder-gray-500 outline-none focus:ring-1 focus:ring-gray-600 border border-gray-700"
+  const inputClass = "w-full px-3 py-2 rounded-lg text-sm text-white/80 placeholder-white/25 outline-none focus:ring-1 focus:ring-white/20 border border-[#383838] bg-[#0a0a0a]"
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center" style={{ background: '#0a0a0a' }}>
+    <main className="flex-1 flex flex-col items-center justify-center" style={{ background: '#0a0a0a' }}>
       <h2 className="text-3xl font-semibold text-white mb-8 text-center">World Map Tracker</h2>
-      <div className="w-full max-w-sm rounded-xl border border-gray-800 p-8" style={{ background: '#1d1d1e' }}>
+      <div className="w-full max-w-sm rounded-xl border border-[#383838] p-8" style={{ background: '#1e1e1f' }}>
+        {!forgotMode && (
+          <Link
+            href="/"
+            className="text-xs text-white/30 hover:text-white/60 mb-6 block transition-colors"
+          >
+            ← Back
+          </Link>
+        )}
         {forgotMode ? (
           <>
             <button
               onClick={() => { setForgotMode(false); setForgotMsg('') }}
-              className="text-xs text-gray-500 hover:text-gray-300 mb-6 block"
+              className="text-xs text-white/30 hover:text-white/60 mb-6 block transition-colors"
             >
               ← Back
             </button>
-            <h3 className="text-base font-medium text-gray-100 mb-4">Reset password</h3>
+            <h3 className="text-sm font-medium text-white/70 uppercase tracking-wide mb-4">Reset password</h3>
             <form onSubmit={handleForgot} className="space-y-4">
               <input
                 type="email"
@@ -73,7 +82,6 @@ export default function LoginPage() {
                 onChange={e => setForgotEmail(e.target.value)}
                 required
                 className={inputClass}
-                style={{ background: '#0a0a0a' }}
               />
               {forgotMsg && (
                 <p className={`text-xs ${forgotMsg.includes('Check') ? 'text-green-400' : 'text-red-400'}`}>
@@ -83,7 +91,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={forgotLoading}
-                className="w-full py-2 rounded-lg text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                className="w-full py-2 rounded-lg text-sm font-medium text-white/80 bg-[#2b2b2c] border border-[#383838] hover:bg-[#383838] hover:text-white disabled:opacity-40 transition-colors"
               >
                 {forgotLoading ? 'Sending…' : 'Send reset link'}
               </button>
@@ -98,7 +106,6 @@ export default function LoginPage() {
               onChange={e => setEmail(e.target.value)}
               required
               className={inputClass}
-              style={{ background: '#0a0a0a' }}
             />
             <input
               type="password"
@@ -107,13 +114,12 @@ export default function LoginPage() {
               onChange={e => setPassword(e.target.value)}
               required
               className={inputClass}
-              style={{ background: '#0a0a0a' }}
             />
             {error && <p className="text-xs text-red-400">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 rounded-lg text-sm font-medium text-white bg-gray-700 hover:bg-gray-600 disabled:opacity-50 transition-colors"
+              className="w-full py-2 rounded-lg text-sm font-medium text-white/80 bg-[#2b2b2c] border border-[#383838] hover:bg-[#383838] hover:text-white disabled:opacity-40 transition-colors"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
@@ -121,10 +127,19 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setForgotMode(true); setForgotEmail(email) }}
-                className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2"
+                className="text-xs text-white/30 hover:text-white/60 transition-colors"
               >
                 Forgot password?
               </button>
+            </div>
+            <div className="pt-4 border-t border-[#383838] text-center">
+              <span className="text-xs text-white/30">Don&apos;t have an account? </span>
+              <Link
+                href="/signup"
+                className="text-xs text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors"
+              >
+                Sign up
+              </Link>
             </div>
           </form>
         )}
