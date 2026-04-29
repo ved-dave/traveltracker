@@ -1,0 +1,16 @@
+# dependencies
+website/node_modules/
+
+# Next.js build output
+website/.next/
+website/out/
+
+# environment variables
+website/.env.local
+website/.env*.local
+
+# TypeScript build info
+website/tsconfig.tsbuildinfo
+
+# OS
+.DS_Store
