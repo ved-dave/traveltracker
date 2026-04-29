@@ -14,7 +14,7 @@ interface Props {
   onSave?: (regions: Record<string, string>, colors: Colors) => void
 }
 
-const EXCLUDE = new Set(['840'])
+const EXCLUDE = new Set(['840', '124'])
 
 const STATUS_CYCLE  = ['unvisited', 'visited', 'lived']
 const STATUS_LABELS: Record<string, string> = {
@@ -115,6 +115,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
         g.attr('transform', t.toString())
         g.selectAll('.country-path').attr('stroke-width', 0.5 / t.k)
         g.selectAll('.us-state-path').attr('stroke-width', 0.3 / t.k)
+        g.selectAll('.ca-province-path').attr('stroke-width', 0.3 / t.k)
         const zb = document.getElementById('wmt-zoom')
         if (zb) zb.textContent = `${Math.round(t.k)}x`
         const rb = document.getElementById('wmt-res')
@@ -208,8 +209,9 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
     Promise.all([
       d3.json('/topo/countries-110m.json'),
       d3.json('/topo/states-10m.json'),
+      d3.json('/topo/canada-provinces.geojson'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([world, usStates]: any[]) => {
+    ]).then(([world, usStates, caProvinces]: any[]) => {
       if (cancelled) return
       if (loadingEl) loadingEl.style.display = 'none'
 
@@ -218,14 +220,18 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
         .filter((d: any) => !EXCLUDE.has(String(d.id)))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const usF = (topojson.feature(usStates, usStates.objects.states) as any).features
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const caF = caProvinces.features as any[]
 
       const gC = g.append('g').attr('class', 'layer-countries')
       const gU = g.append('g').attr('class', 'layer-us')
+      const gCA = g.append('g').attr('class', 'layer-canada')
 
-      makePaths(gC, countries, d => 'c_'  + d.id, d => d.properties?.name || 'Country', 'country',  0.5)
-      makePaths(gU, usF,       d => 'us_' + d.id, d => d.properties?.name || 'State',   'us-state', 0.3)
+      makePaths(gC,  countries, d => 'c_'  + d.id,                       d => d.properties?.name || 'Country',  'country',   0.5)
+      makePaths(gU,  usF,       d => 'us_' + d.id,                       d => d.properties?.name || 'State',    'us-state',  0.3)
+      makePaths(gCA, caF,       d => 'ca_' + d.properties?.['hc-a2'],    d => d.properties?.name || 'Province', 'ca-province', 0.3)
 
-      setTotal(countries.length + usF.length)
+      setTotal(countries.length + usF.length + caF.length)
       updateCounts()
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
