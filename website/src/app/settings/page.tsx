@@ -1,12 +1,10 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SettingsPage() {
+function SettingsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [deleteState, setDeleteState] = useState<'idle' | 'confirming' | 'deleting'>('idle')
@@ -127,4 +125,8 @@ export default function SettingsPage() {
       </div>
     </main>
   )
+}
+
+export default function SettingsPage() {
+  return <Suspense><SettingsContent /></Suspense>
 }
