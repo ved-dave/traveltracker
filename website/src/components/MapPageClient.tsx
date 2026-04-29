@@ -15,6 +15,7 @@ interface Props {
   initialColors: Colors
   initialIsPublic: boolean
   isOwner: boolean
+  viewerIsLoggedIn: boolean
 }
 
 export default function MapPageClient({
@@ -24,6 +25,7 @@ export default function MapPageClient({
   initialColors,
   initialIsPublic,
   isOwner,
+  viewerIsLoggedIn,
 }: Props) {
   const supabase = createClient()
 
@@ -57,7 +59,7 @@ export default function MapPageClient({
         onSave={isOwner ? handleSave : undefined}
       />
 
-      {!isOwner && (
+      {!isOwner && !viewerIsLoggedIn && (
         <p className="mt-6 text-center text-xs text-white/30">
           Want to create your own map?{' '}
           <Link href="/" className="text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors">

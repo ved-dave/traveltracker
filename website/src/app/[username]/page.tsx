@@ -47,6 +47,7 @@ export default async function UserMapPage({ params }: Props) {
       initialColors={colors}
       initialIsPublic={map.is_public ?? false}
       isOwner={isOwner}
+      viewerIsLoggedIn={!!user}
     />
   )
 }
