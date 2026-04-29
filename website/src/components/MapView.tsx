@@ -66,10 +66,14 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
     setCounts(c)
   }, [])
 
-  const repaintAll = useCallback(() => {
+  const repaintAll = useCallback((animate = true) => {
     gRef.current?.selectAll<SVGPathElement, unknown>('path[data-rid]').each(function () {
       const id = this.getAttribute('data-rid')
-      if (id) d3.select(this).attr('fill', colorsRef.current[regionStatusRef.current[id] || 'unvisited'])
+      if (!id) return
+      const sel = d3.select(this)
+      const fill = colorsRef.current[regionStatusRef.current[id] || 'unvisited']
+      if (animate) sel.transition().duration(250).attr('fill', fill)
+      else sel.attr('fill', fill)
     })
   }, [])
 
@@ -197,7 +201,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
           else regionStatusRef.current[id] = next
           if (id === homeRegionRef.current && next !== 'home') homeRegionRef.current = null
 
-          d3.select(this).attr('fill', colorsRef.current[next])
+          d3.select(this).transition().duration(250).attr('fill', colorsRef.current[next])
           const info = document.getElementById('wmt-info')
           if (info) info.textContent = `${name}: ${STATUS_LABELS[next]}`
           updateCounts()
@@ -265,6 +269,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
   }, [initKey])
 
   function handleOpenColorPicker(status: string) {
+    if (cpOpen && cpTarget === status) { setCpOpen(false); return }
     setCpTarget(status)
     setCpValue(colorsRef.current[status])
     setCpOpen(true)
@@ -288,7 +293,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
   function handleClearAll() {
     regionStatusRef.current = {}
     homeRegionRef.current   = null
-    repaintAll()
+    repaintAll(false)
     updateCounts()
     triggerSave()
     const info = document.getElementById('wmt-info')
@@ -409,12 +414,6 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
                 className="text-xs px-2.5 py-1 border border-white/15 rounded-lg text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
               >
                 Apply
-              </button>
-              <button
-                onClick={() => setCpOpen(false)}
-                className="text-xs px-2.5 py-1 border border-white/15 rounded-lg text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
-              >
-                Cancel
               </button>
             </div>
           )}
