@@ -56,6 +56,15 @@ export default function MapPageClient({
         editable={isOwner}
         onSave={isOwner ? handleSave : undefined}
       />
+
+      {!isOwner && (
+        <p className="mt-6 text-center text-xs text-white/30">
+          Want to create your own map?{' '}
+          <Link href="/" className="text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors">
+            Click here
+          </Link>
+        </p>
+      )}
     </main>
   )
 }
