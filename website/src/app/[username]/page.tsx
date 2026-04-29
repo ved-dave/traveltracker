@@ -54,7 +54,7 @@ export default async function UserMapPage({ params }: Props) {
 
 function PrivateOrMissing() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: '#0a0a0a' }}>
+    <main className="flex-1 flex flex-col items-center justify-center p-6" style={{ background: '#0a0a0a' }}>
       <h2 className="text-3xl font-semibold text-white mb-8 text-center">World Map Tracker</h2>
       <p className="text-sm text-white/40 mb-4">This map is private or doesn&apos;t exist.</p>
       <Link href="/" className="text-xs text-white/30 hover:text-white/60 transition-colors">

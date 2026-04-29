@@ -34,7 +34,7 @@ export default function MapPageClient({
   }, [mapId, supabase])
 
   return (
-    <main className="min-h-screen p-6" style={{ background: '#0a0a0a' }}>
+    <main className="flex-1 p-6" style={{ background: '#0a0a0a' }}>
       <div className="relative mb-6 text-center">
         <h2 className="text-3xl font-semibold text-white mb-1">World Map Tracker</h2>
         <p className="text-sm text-white/40 uppercase tracking-wide">{username}&apos;s travel tracker</p>

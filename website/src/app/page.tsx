@@ -13,7 +13,7 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="min-h-screen p-6" style={{ background: '#0a0a0a' }}>
+    <main className="flex-1 p-6" style={{ background: '#0a0a0a' }}>
       <div className="relative mb-4">
         <h2 className="text-3xl font-semibold text-white mb-8 text-center">World Map Tracker</h2>
         <Link

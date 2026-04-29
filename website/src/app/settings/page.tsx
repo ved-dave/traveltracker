@@ -64,7 +64,7 @@ export default function SettingsPage() {
   const btnClass = "w-full py-2 rounded-lg text-sm font-medium text-white/80 bg-[#2b2b2c] border border-[#383838] hover:bg-[#383838] hover:text-white transition-colors"
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center" style={{ background: '#0a0a0a' }}>
+    <main className="flex-1 flex flex-col items-center justify-center" style={{ background: '#0a0a0a' }}>
       <h2 className="text-3xl font-semibold text-white mb-8 text-center">World Map Tracker</h2>
       <div className="w-full max-w-sm rounded-xl border border-[#383838] p-8" style={{ background: '#1e1e1f' }}>
         <button
