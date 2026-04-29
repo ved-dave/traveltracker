@@ -309,7 +309,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       {/* Color key — always visible; interactive only when editable */}
       <div className="flex items-center justify-between mb-2.5 flex-wrap gap-2">
         <div className="flex gap-1.5 flex-wrap items-center">
-          <span className="text-xs text-gray-400">Color key:</span>
+          <span className="text-xs text-white/40 uppercase tracking-wide">Color key:</span>
           {(['visited', 'lived', 'home'] as const).map(status => (
             editable ? (
               <button
@@ -330,7 +330,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
               </span>
             )
           ))}
-          {editable && <span className="text-xs text-gray-600">(Click to recolor)</span>}
+          {editable && <span className="text-xs text-white/25">Click to recolor</span>}
         </div>
         {editable && (
           <div className="flex gap-1.5">
@@ -347,13 +347,13 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
             </button>
             <button
               onClick={handleResetZoom}
-              className="text-xs px-2.5 py-1 rounded-md border border-gray-700 text-gray-400 hover:bg-gray-800 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
             >
               Reset view
             </button>
             <button
               onClick={handleClearAll}
-              className="text-xs px-2.5 py-1 rounded-md border border-gray-700 text-gray-400 hover:bg-gray-800 cursor-pointer"
+              className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
             >
               Clear all
             </button>
@@ -369,9 +369,9 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
           ['Home',    counts.home],
           ['Regions', total],
         ] as const).map(([label, value]) => (
-          <div key={label} className="rounded-lg p-2 text-center" style={{ background: '#1d1d1e' }}>
-            <div className="text-xs text-gray-500">{label}</div>
-            <div className="text-xl font-medium text-gray-100">{value}</div>
+          <div key={label} className="rounded-lg p-2 text-center" style={{ background: '#1e1e1f' }}>
+            <div className="text-xs text-white/30 uppercase tracking-wide">{label}</div>
+            <div className="text-xl font-medium text-white/80">{value}</div>
           </div>
         ))}
       </div>
@@ -380,8 +380,8 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
         <>
           {/* Color picker panel */}
           {cpOpen && (
-            <div className="flex items-center gap-3 flex-wrap border border-gray-700 rounded-lg px-3.5 py-2.5 mb-2.5" style={{ background: '#1d1d1e' }}>
-              <span className="text-xs text-gray-400">
+            <div className="flex items-center gap-3 flex-wrap border border-[#383838] rounded-lg px-3.5 py-2.5 mb-2.5" style={{ background: '#1e1e1f' }}>
+              <span className="text-xs text-white/40 uppercase tracking-wide">
                 Color for: {STATUS_LABELS[cpTarget] ?? cpTarget}
               </span>
               <input
@@ -397,20 +397,20 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
                   const v = e.target.value
                   if (/^#[0-9a-fA-F]{0,6}$/.test(v)) setCpValue(v)
                 }}
-                className="w-24 text-xs px-2 py-1 rounded-md border border-gray-700 text-gray-300 bg-transparent font-mono"
+                className="w-24 text-xs px-2 py-1 rounded-lg border border-[#383838] text-white/60 bg-transparent font-mono"
                 spellCheck={false}
               />
               <button
                 onClick={handleApplyColor}
-                className="text-xs px-2.5 py-1 border border-gray-700 rounded-md text-gray-300 hover:bg-gray-700 cursor-pointer"
+                className="text-xs px-2.5 py-1 border border-white/15 rounded-lg text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
               >
-                apply
+                Apply
               </button>
               <button
                 onClick={() => setCpOpen(false)}
-                className="text-xs px-2.5 py-1 border border-gray-700 rounded-md text-gray-300 hover:bg-gray-700 cursor-pointer"
+                className="text-xs px-2.5 py-1 border border-white/15 rounded-lg text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
               >
-                cancel
+                Cancel
               </button>
             </div>
           )}

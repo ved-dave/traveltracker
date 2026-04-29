@@ -42,7 +42,7 @@ export default function MapPageClient({
     <main className="min-h-screen p-6" style={{ background: '#0a0a0a' }}>
       <div className="relative mb-6 text-center">
         <h2 className="text-3xl font-semibold text-white mb-1">World Map Tracker</h2>
-        <p className="text-sm text-gray-400">{username}&apos;s travel tracker</p>
+        <p className="text-sm text-white/40 uppercase tracking-wide">{username}&apos;s travel tracker</p>
         {isOwner && (
           <div className="absolute right-0 top-0 flex items-center gap-3">
             <PrivacyToggle
@@ -52,7 +52,7 @@ export default function MapPageClient({
             />
             <Link
               href="/settings"
-              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-xs text-white/30 hover:text-white/60 transition-colors"
             >
               Settings
             </Link>

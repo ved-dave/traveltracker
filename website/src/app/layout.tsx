@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
+import { Poppins } from 'next/font/google'
 import Footer from '@/components/Footer'
 import './globals.css'
+
+const poppins = Poppins({ subsets: ['latin'], weight: ['300', '400', '500', '600'] })
 
 export const metadata: Metadata = {
   title: 'World Map Tracker',
@@ -10,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={GeistSans.className}>
+    <html lang="en" className={poppins.className}>
       <body style={{ background: '#0a0a0a' }}>
         {children}
         <Footer />
