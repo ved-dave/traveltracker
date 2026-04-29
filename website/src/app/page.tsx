@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import MapView from '@/components/MapView'
-import { DEFAULT_COLORS } from '@/lib/map-utils'
+import RootMap from '@/components/RootMap'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -24,11 +23,7 @@ export default async function HomePage() {
         </Link>
       </div>
 
-      <MapView
-        initialRegions={{}}
-        initialColors={{ ...DEFAULT_COLORS }}
-        editable={true}
-      />
+      <RootMap />
     </main>
   )
 }

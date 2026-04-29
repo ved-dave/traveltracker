@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -122,6 +123,15 @@ export default function LoginPage() {
               >
                 Forgot password?
               </button>
+            </div>
+            <div className="pt-4 border-t border-[#383838] text-center">
+              <span className="text-xs text-white/30">Don&apos;t have an account? </span>
+              <Link
+                href="/signup"
+                className="text-xs text-white/50 hover:text-white/80 underline underline-offset-2 transition-colors"
+              >
+                Sign up
+              </Link>
             </div>
           </form>
         )}
