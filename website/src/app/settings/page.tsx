@@ -1,24 +1,34 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function SettingsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [deleteState, setDeleteState] = useState<'idle' | 'confirming' | 'deleting'>('idle')
   const [deleteError, setDeleteError] = useState('')
   const [mapId, setMapId] = useState<string | null>(null)
-  const [isPublic, setIsPublic] = useState<boolean | null>(null)
+
+  // Initialize from search param so the button renders immediately
+  const [isPublic, setIsPublic] = useState<boolean | null>(() => {
+    const p = searchParams.get('public')
+    return p === null ? null : p === '1'
+  })
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
       const { data } = await supabase.from('maps').select('id, is_public').eq('user_id', user.id).single()
-      if (data) { setMapId(data.id); setIsPublic(data.is_public) }
+      if (data) {
+        setMapId(data.id)
+        // Only override if we had no param (navigated directly to /settings)
+        if (searchParams.get('public') === null) setIsPublic(data.is_public)
+      }
     })
-  }, [])
+  }, [searchParams])
 
   async function handlePrivacyToggle() {
     if (!mapId || isPublic === null) return

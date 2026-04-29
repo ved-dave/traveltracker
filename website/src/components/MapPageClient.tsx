@@ -22,6 +22,7 @@ export default function MapPageClient({
   mapId,
   initialRegions,
   initialColors,
+  initialIsPublic,
   isOwner,
 }: Props) {
   const supabase = createClient()
@@ -37,7 +38,7 @@ export default function MapPageClient({
         <p className="text-sm text-white/40 uppercase tracking-wide">{username}&apos;s travel tracker</p>
         {isOwner && (
           <Link
-            href="/settings"
+            href={`/settings?public=${initialIsPublic ? '1' : '0'}`}
             className="absolute right-0 top-0 text-white/30 hover:text-white/70 transition-colors"
             title="Settings"
           >
