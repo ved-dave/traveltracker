@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import Link from 'next/link'
 import MapView from '@/components/MapView'
 import { createClient } from '@/lib/supabase/client'
@@ -28,6 +28,18 @@ export default function MapPageClient({
   viewerIsLoggedIn,
 }: Props) {
   const supabase = createClient()
+  const [shareLabel, setShareLabel] = useState('Share map')
+
+  const handleShare = useCallback(async () => {
+    const url = `${window.location.origin}/${username}`
+    if (navigator.share) {
+      try { await navigator.share({ title: `${username}'s travel tracker`, url }) } catch { /* dismissed */ }
+    } else {
+      await navigator.clipboard.writeText(url)
+      setShareLabel('Copied!')
+      setTimeout(() => setShareLabel('Share map'), 2000)
+    }
+  }, [username])
 
   const handleSave = useCallback((regions: Record<string, string>, colors: Colors) => {
     supabase.from('maps').update({ regions, colors }).eq('id', mapId).then()
@@ -57,6 +69,14 @@ export default function MapPageClient({
         initialColors={initialColors}
         editable={isOwner}
         onSave={isOwner ? handleSave : undefined}
+        shareSlot={isOwner ? (
+          <button
+            onClick={handleShare}
+            className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 transition-colors cursor-pointer"
+          >
+            {shareLabel}
+          </button>
+        ) : undefined}
       />
 
       {!isOwner && !viewerIsLoggedIn && (

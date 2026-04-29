@@ -12,6 +12,7 @@ interface Props {
   initialColors: Colors
   editable: boolean
   onSave?: (regions: Record<string, string>, colors: Colors) => void
+  shareSlot?: React.ReactNode
 }
 
 const EXCLUDE = new Set(['840', '124'])
@@ -24,7 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
   home:      'Home',
 }
 
-export default function MapView({ initialRegions, initialColors, editable, onSave }: Props) {
+export default function MapView({ initialRegions, initialColors, editable, onSave, shareSlot }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
   const gRef   = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null)
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
@@ -332,33 +333,36 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
           ))}
           {editable && <span className="text-xs text-white/25">Click to recolor</span>}
         </div>
-        {editable && (
-          <div className="flex gap-1.5">
-            <button
-              onClick={() => setHomeMode(m => !m)}
-              className="text-xs px-2.5 py-1 rounded-md cursor-pointer"
-              style={{
-                border: `1.5px solid ${allColors.home}`,
-                background: homeMode ? allColors.home : 'transparent',
-                color: homeMode ? 'white' : allColors.home,
-              }}
-            >
-              Set home
-            </button>
-            <button
-              onClick={handleResetZoom}
-              className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
-            >
-              Reset view
-            </button>
-            <button
-              onClick={handleClearAll}
-              className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
+        <div className="flex gap-1.5 items-center">
+          {shareSlot}
+          {editable && (
+            <>
+              <button
+                onClick={() => setHomeMode(m => !m)}
+                className="text-xs px-2.5 py-1 rounded-md cursor-pointer"
+                style={{
+                  border: `1.5px solid ${allColors.home}`,
+                  background: homeMode ? allColors.home : 'transparent',
+                  color: homeMode ? 'white' : allColors.home,
+                }}
+              >
+                Set home
+              </button>
+              <button
+                onClick={handleResetZoom}
+                className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
+              >
+                Reset view
+              </button>
+              <button
+                onClick={handleClearAll}
+                className="text-xs px-2.5 py-1 rounded-lg border border-white/15 text-white/50 hover:bg-white/5 hover:text-white/80 cursor-pointer transition-colors"
+              >
+                Clear all
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Stats — always visible */}
