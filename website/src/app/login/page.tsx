@@ -57,6 +57,14 @@ export default function LoginPage() {
     <main className="flex-1 flex flex-col items-center justify-center" style={{ background: '#0a0a0a' }}>
       <h2 className="text-3xl font-semibold text-white mb-8 text-center">World Map Tracker</h2>
       <div className="w-full max-w-sm rounded-xl border border-[#383838] p-8" style={{ background: '#1e1e1f' }}>
+        {!forgotMode && (
+          <Link
+            href="/"
+            className="text-xs text-white/30 hover:text-white/60 mb-6 block transition-colors"
+          >
+            ← Back
+          </Link>
+        )}
         {forgotMode ? (
           <>
             <button
