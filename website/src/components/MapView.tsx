@@ -109,10 +109,13 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 300])
       .translateExtent([[0, 0], [W, H]])
-      // On touch devices, only handle pinch (2 fingers) — single finger defers to CSS scroll
+      // At 1x: single finger defers to CSS scroll. When zoomed in: single finger pans the map.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((ev: any) => {
-        if (ev.touches) return ev.touches.length >= 2
+        if (ev.touches) {
+          if (ev.touches.length === 1) return currentK > 1
+          return ev.touches.length >= 2
+        }
         return !ev.ctrlKey && !ev.button
       })
       .on('start', (ev) => {
@@ -136,6 +139,8 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
           const dy = ev.sourceEvent.clientY - dragStartPos[1]
           if (Math.sqrt(dx * dx + dy * dy) > 4) isDragging = true
         }
+        // Hand touch control back to CSS when fully zoomed out, D3 when zoomed in
+        svgEl.style.touchAction = t.k > 1 ? 'none' : 'pan-x pan-y'
       })
       .on('end', () => { setTimeout(() => { isDragging = false }, 50) })
 
