@@ -109,6 +109,12 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([1, 300])
       .translateExtent([[0, 0], [W, H]])
+      // On touch devices, only handle pinch (2 fingers) — single finger defers to CSS scroll
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((ev: any) => {
+        if (ev.touches) return ev.touches.length >= 2
+        return !ev.ctrlKey && !ev.button
+      })
       .on('start', (ev) => {
         isDragging = false
         if (ev.sourceEvent?.type === 'mousedown')
@@ -134,6 +140,8 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       .on('end', () => { setTimeout(() => { isDragging = false }, 50) })
 
     svg.call(zoom).on('dblclick.zoom', null)
+    // D3 sets touch-action:none — restore pan so single-finger scrolls the container on mobile
+    svgEl.style.touchAction = 'pan-x pan-y'
     zoomRef.current = zoom
     const g = svg.append('g')
     gRef.current = g
