@@ -237,14 +237,16 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       d3.json('/topo/countries-110m.json'),
       d3.json('/topo/states-10m.json'),
       d3.json('/topo/canada-provinces.geojson'),
+      d3.json('/topo/countries-extra.geojson'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([world, usStates, caProvinces]: any[]) => {
+    ]).then(([world, usStates, caProvinces, extra]: any[]) => {
       if (cancelled) return
       if (loadingEl) loadingEl.style.display = 'none'
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const countries = (topojson.feature(world, world.objects.countries) as any).features
         .filter((d: any) => !EXCLUDE.has(String(d.id)))
+        .concat(extra.features)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const usF = (topojson.feature(usStates, usStates.objects.states) as any).features
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -278,6 +280,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const hi = (topojson.feature(worldHi, worldHi.objects.countries) as any).features
               .filter((d: any) => !EXCLUDE.has(String(d.id)))
+            for (const d of hi) if (String(d.id) === '234' && d.properties) d.properties.name = 'Faroe Islands'
             makePaths(g.select('.layer-countries'), hi, d => 'c_' + d.id, d => d.properties?.name || 'Country', 'country', 0.5)
             g.selectAll('.country-path').attr('stroke-width', 0.5 / currentK)
             zoom.on('zoom.hires', null)
