@@ -19,6 +19,16 @@ interface Region { id: string; name: string; type: 'Country' | 'US State' | 'Pro
 
 const EXCLUDE = new Set(['840', '124'])
 
+// world-atlas omits numeric ids for a handful of disputed/unclaimed territories
+// (Kosovo, Somaliland, N. Cyprus, ...) — fall back to a slug of the name so
+// each still gets a unique, stable region id instead of colliding on "c_undefined"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function countryId(d: any): string {
+  if (d.id !== undefined && d.id !== null) return String(d.id)
+  const name = d.properties?.name || 'unknown'
+  return 'x-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '')
+}
+
 const STATUS_CYCLE  = ['unvisited', 'visited', 'lived']
 const STATUS_LABELS: Record<string, string> = {
   unvisited: 'Unvisited',
@@ -256,7 +266,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       const gU = g.append('g').attr('class', 'layer-us')
       const gCA = g.append('g').attr('class', 'layer-canada')
 
-      makePaths(gC,  countries, d => 'c_'  + d.id,                       d => d.properties?.name || 'Country',  'country',   0.5)
+      makePaths(gC,  countries, d => 'c_'  + countryId(d),               d => d.properties?.name || 'Country',  'country',   0.5)
       makePaths(gU,  usF,       d => 'us_' + d.id,                       d => d.properties?.name || 'State',    'us-state',  0.3)
       makePaths(gCA, caF,       d => 'ca_' + d.properties?.['hc-a2'],    d => d.properties?.name || 'Province', 'ca-province', 0.3)
 
@@ -265,7 +275,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const allRegions: Region[] = [
-        ...countries.map((d: any) => ({ id: 'c_' + d.id,  name: d.properties?.name || 'Country',  type: 'Country'  as const })),
+        ...countries.map((d: any) => ({ id: 'c_' + countryId(d),  name: d.properties?.name || 'Country',  type: 'Country'  as const })),
         ...usF.map((d: any)       => ({ id: 'us_' + d.id, name: d.properties?.name || 'State',    type: 'US State' as const })),
         ...caF.map((d: any)       => ({ id: 'ca_' + d.properties?.['hc-a2'], name: d.properties?.name || 'Province', type: 'Province' as const })),
       ]
@@ -281,7 +291,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
             const hi = (topojson.feature(worldHi, worldHi.objects.countries) as any).features
               .filter((d: any) => !EXCLUDE.has(String(d.id)))
             for (const d of hi) if (String(d.id) === '234' && d.properties) d.properties.name = 'Faroe Islands'
-            makePaths(g.select('.layer-countries'), hi, d => 'c_' + d.id, d => d.properties?.name || 'Country', 'country', 0.5)
+            makePaths(g.select('.layer-countries'), hi, d => 'c_' + countryId(d), d => d.properties?.name || 'Country', 'country', 0.5)
             g.selectAll('.country-path').attr('stroke-width', 0.5 / currentK)
             zoom.on('zoom.hires', null)
           }
