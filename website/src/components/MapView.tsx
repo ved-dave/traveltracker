@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import * as topojson from 'topojson-client'
 import { DEFAULT_COLORS } from '@/lib/map-utils'
@@ -15,7 +15,25 @@ interface Props {
   shareSlot?: React.ReactNode
 }
 
+interface Region { id: string; name: string; type: 'Country' | 'US State' | 'Province' }
+
 const EXCLUDE = new Set(['840', '124'])
+
+// world-atlas omits numeric ids for a handful of disputed/unclaimed territories
+// (Kosovo, Somaliland, N. Cyprus, ...) — fall back to a slug of the name so
+// each still gets a unique, stable region id instead of colliding on "c_undefined"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function countryId(d: any): string {
+  if (d.id !== undefined && d.id !== null) return String(d.id)
+  const name = d.properties?.name || 'unknown'
+  return 'x-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '')
+}
+
+// Searching one of these shows all US states / Canadian provinces instead of an
+// exact name match, since "United States" / "Canada" aren't regions themselves
+// (they're rendered as their subdivisions, not a single clickable country)
+const USA_ALIASES    = ['usa', 'us', 'united states', 'united states of america']
+const CANADA_ALIAS   = 'canada'
 
 const STATUS_CYCLE  = ['unvisited', 'visited', 'lived']
 const STATUS_LABELS: Record<string, string> = {
@@ -47,6 +65,11 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
   const [cpOpen,   setCpOpen]   = useState(false)
   const [cpTarget, setCpTarget] = useState<string>('visited')
   const [cpValue,  setCpValue]  = useState('#1D9E75')
+
+  const [regions,    setRegions]    = useState<Region[]>([])
+  const [listOpen,   setListOpen]   = useState(false)
+  const [listSearch, setListSearch] = useState('')
+  const [mapVersion, setMapVersion] = useState(0)
 
   // Keep homeModeRef in sync
   useEffect(() => { homeModeRef.current = homeMode }, [homeMode])
@@ -203,6 +226,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
             setHomeMode(false)
             updateCounts()
             triggerSave()
+            setMapVersion(v => v + 1)
             const info = document.getElementById('wmt-info')
             if (info) info.textContent = `${name}: Home base set`
             return
@@ -219,6 +243,7 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
           if (info) info.textContent = `${name}: ${STATUS_LABELS[next]}`
           updateCounts()
           triggerSave()
+          setMapVersion(v => v + 1)
         })
     }
 
@@ -228,14 +253,16 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       d3.json('/topo/countries-110m.json'),
       d3.json('/topo/states-10m.json'),
       d3.json('/topo/canada-provinces.geojson'),
+      d3.json('/topo/countries-extra.geojson'),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ]).then(([world, usStates, caProvinces]: any[]) => {
+    ]).then(([world, usStates, caProvinces, extra]: any[]) => {
       if (cancelled) return
       if (loadingEl) loadingEl.style.display = 'none'
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const countries = (topojson.feature(world, world.objects.countries) as any).features
         .filter((d: any) => !EXCLUDE.has(String(d.id)))
+        .concat(extra.features)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const usF = (topojson.feature(usStates, usStates.objects.states) as any).features
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -245,12 +272,20 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       const gU = g.append('g').attr('class', 'layer-us')
       const gCA = g.append('g').attr('class', 'layer-canada')
 
-      makePaths(gC,  countries, d => 'c_'  + d.id,                       d => d.properties?.name || 'Country',  'country',   0.5)
+      makePaths(gC,  countries, d => 'c_'  + countryId(d),               d => d.properties?.name || 'Country',  'country',   0.5)
       makePaths(gU,  usF,       d => 'us_' + d.id,                       d => d.properties?.name || 'State',    'us-state',  0.3)
       makePaths(gCA, caF,       d => 'ca_' + d.properties?.['hc-a2'],    d => d.properties?.name || 'Province', 'ca-province', 0.3)
 
       setTotal(countries.length + usF.length + caF.length)
       updateCounts()
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allRegions: Region[] = [
+        ...countries.map((d: any) => ({ id: 'c_' + countryId(d),  name: d.properties?.name || 'Country',  type: 'Country'  as const })),
+        ...usF.map((d: any)       => ({ id: 'us_' + d.id, name: d.properties?.name || 'State',    type: 'US State' as const })),
+        ...caF.map((d: any)       => ({ id: 'ca_' + d.properties?.['hc-a2'], name: d.properties?.name || 'Province', type: 'Province' as const })),
+      ]
+      setRegions(allRegions.sort((a, b) => a.name.localeCompare(b.name)))
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       d3.json('/topo/countries-50m.json').then((worldHi: any) => {
@@ -261,7 +296,8 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const hi = (topojson.feature(worldHi, worldHi.objects.countries) as any).features
               .filter((d: any) => !EXCLUDE.has(String(d.id)))
-            makePaths(g.select('.layer-countries'), hi, d => 'c_' + d.id, d => d.properties?.name || 'Country', 'country', 0.5)
+            for (const d of hi) if (String(d.id) === '234' && d.properties) d.properties.name = 'Faroe Islands'
+            makePaths(g.select('.layer-countries'), hi, d => 'c_' + countryId(d), d => d.properties?.name || 'Country', 'country', 0.5)
             g.selectAll('.country-path').attr('stroke-width', 0.5 / currentK)
             zoom.on('zoom.hires', null)
           }
@@ -309,9 +345,37 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
     repaintAll(false)
     updateCounts()
     triggerSave()
+    setMapVersion(v => v + 1)
     const info = document.getElementById('wmt-info')
     if (info) info.textContent = ''
   }
+
+  function handleListRegionClick(id: string) {
+    const cur  = regionStatusRef.current[id] || 'unvisited'
+    const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length]
+    if (next === 'unvisited') delete regionStatusRef.current[id]
+    else regionStatusRef.current[id] = next
+    if (id === homeRegionRef.current && next !== 'home') homeRegionRef.current = null
+
+    gRef.current?.selectAll<SVGPathElement, unknown>(`path[data-rid="${id}"]`)
+      .transition().duration(250).attr('fill', colorsRef.current[next])
+
+    updateCounts()
+    triggerSave()
+    setMapVersion(v => v + 1)
+  }
+
+  const filteredRegions = useMemo(() => {
+    const q = listSearch.trim().toLowerCase()
+    if (!q) return regions
+    if (USA_ALIASES.some(a => a === q || a.startsWith(q))) {
+      return regions.filter(r => r.type === 'US State')
+    }
+    if (CANADA_ALIAS === q || CANADA_ALIAS.startsWith(q)) {
+      return regions.filter(r => r.type === 'Province')
+    }
+    return regions.filter(r => r.name.toLowerCase().includes(q))
+  }, [regions, listSearch])
 
   return (
     <>
@@ -466,6 +530,63 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
       </div>
 
       <div id="wmt-info" style={{ marginTop: 6, fontSize: 12, color: '#666', minHeight: 18, textAlign: 'center' }} />
+
+      {/* Region search panel — editable only */}
+      {editable && regions.length > 0 && (
+        <div className="mt-3">
+          <button
+            onClick={() => setListOpen(o => !o)}
+            className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-[#383838] text-xs text-white/40 hover:text-white/60 transition-colors cursor-pointer"
+            style={{ background: '#1e1e1f' }}
+          >
+            <span>Search regions</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: listOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          {listOpen && (
+            <div className="mt-1 rounded-lg border border-[#383838] overflow-hidden" style={{ background: '#1e1e1f' }}>
+              <div className="px-3 py-2 border-b border-[#383838]">
+                <input
+                  type="text"
+                  placeholder="Search by name…"
+                  value={listSearch}
+                  onChange={e => setListSearch(e.target.value)}
+                  className="w-full bg-transparent text-xs text-white/70 placeholder-white/25 outline-none"
+                  autoFocus
+                />
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 280 }}>
+                {filteredRegions.length === 0 && (
+                  <p className="px-3 py-4 text-xs text-white/25 text-center">No regions found</p>
+                )}
+                {filteredRegions.map(region => {
+                  const status = regionStatusRef.current[region.id] || 'unvisited'
+                  const color  = colorsRef.current[status]
+                  return (
+                    <button
+                      key={region.id}
+                      onClick={() => handleListRegionClick(region.id)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-white/5 transition-colors cursor-pointer border-b border-[#2a2a2b] last:border-0"
+                    >
+                      <span className="shrink-0 w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                      <span className="flex-1 text-xs text-white/70 truncate">{region.name}</span>
+                      {region.type !== 'Country' && (
+                        <span className="shrink-0 text-[10px] text-white/25">{region.type}</span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
   )
 }
