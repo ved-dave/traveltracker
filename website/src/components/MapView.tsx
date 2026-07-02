@@ -29,6 +29,12 @@ function countryId(d: any): string {
   return 'x-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-+|-+$)/g, '')
 }
 
+// Searching one of these shows all US states / Canadian provinces instead of an
+// exact name match, since "United States" / "Canada" aren't regions themselves
+// (they're rendered as their subdivisions, not a single clickable country)
+const USA_ALIASES    = ['usa', 'us', 'united states', 'united states of america']
+const CANADA_ALIAS   = 'canada'
+
 const STATUS_CYCLE  = ['unvisited', 'visited', 'lived']
 const STATUS_LABELS: Record<string, string> = {
   unvisited: 'Unvisited',
@@ -360,8 +366,14 @@ export default function MapView({ initialRegions, initialColors, editable, onSav
   }
 
   const filteredRegions = useMemo(() => {
-    if (!listSearch.trim()) return regions
-    const q = listSearch.toLowerCase()
+    const q = listSearch.trim().toLowerCase()
+    if (!q) return regions
+    if (USA_ALIASES.some(a => a === q || a.startsWith(q))) {
+      return regions.filter(r => r.type === 'US State')
+    }
+    if (CANADA_ALIAS === q || CANADA_ALIAS.startsWith(q)) {
+      return regions.filter(r => r.type === 'Province')
+    }
     return regions.filter(r => r.name.toLowerCase().includes(q))
   }, [regions, listSearch])
 
